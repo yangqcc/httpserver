@@ -25,24 +25,20 @@
 
 package org.jboss.sun.net.httpserver;
 
+import org.jboss.com.sun.net.httpserver.*;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.jboss.com.sun.net.httpserver.Authenticator;
-import org.jboss.com.sun.net.httpserver.Filter;
-import org.jboss.com.sun.net.httpserver.HttpContext;
-import org.jboss.com.sun.net.httpserver.HttpHandler;
-import org.jboss.com.sun.net.httpserver.HttpServer;
-
 /**
  * HttpContext represents a mapping between a protocol (http or https) together with a root URI path
  * to a {@link HttpHandler} which is invoked to handle requests destined
  * for the protocol/path on the associated HttpServer.
  * <p>
- * HttpContext instances are created by {@link HttpServer#createContext(String,String,HttpHandler,Object)}
+ * HttpContext instances are created by {@link HttpServer#createContext(String, String, HttpHandler, Object)}
  * <p>
  */
 class HttpContextImpl extends HttpContext {
@@ -50,7 +46,7 @@ class HttpContextImpl extends HttpContext {
     private String path;
     private String protocol;
     private HttpHandler handler;
-    private Map<String,Object> attributes = new HashMap<String,Object>();
+    private Map<String, Object> attributes = new HashMap<String, Object>();
     private ServerImpl server;
     /* system filters, not visible to applications */
     private LinkedList<Filter> sfilters = new LinkedList<Filter>();
@@ -62,41 +58,45 @@ class HttpContextImpl extends HttpContext {
     /**
      * constructor is package private.
      */
-    HttpContextImpl (String protocol, String path, HttpHandler cb, ServerImpl server) {
+    HttpContextImpl(String protocol, String path, HttpHandler cb, ServerImpl server) {
         if (path == null || protocol == null || path.length() < 1 || path.charAt(0) != '/') {
-            throw new IllegalArgumentException ("Illegal value for path or protocol");
+            throw new IllegalArgumentException("Illegal value for path or protocol");
         }
         this.protocol = protocol.toLowerCase();
         this.path = path;
-        if (!this.protocol.equals ("http") && !this.protocol.equals ("https")) {
-            throw new IllegalArgumentException ("Illegal value for protocol");
+        if (!this.protocol.equals("http") && !this.protocol.equals("https")) {
+            throw new IllegalArgumentException("Illegal value for protocol");
         }
         this.handler = cb;
         this.server = server;
         authfilter = new AuthFilter(null);
-        sfilters.add (authfilter);
+        sfilters.add(authfilter);
     }
 
     /**
      * returns the handler for this context
+     *
      * @return the HttpHandler for this context
      */
-    public HttpHandler getHandler () {
+    @Override
+    public HttpHandler getHandler() {
         return handler;
     }
 
-    public void setHandler (HttpHandler h) {
+    @Override
+    public void setHandler(HttpHandler h) {
         if (h == null) {
-            throw new NullPointerException ("Null handler parameter");
+            throw new NullPointerException("Null handler parameter");
         }
         if (handler != null) {
-            throw new IllegalArgumentException ("handler already set");
+            throw new IllegalArgumentException("handler already set");
         }
         handler = h;
     }
 
     /**
      * returns the path this context was created with
+     *
      * @return this context's path
      */
     public String getPath() {
@@ -105,18 +105,20 @@ class HttpContextImpl extends HttpContext {
 
     /**
      * returns the server this context was created with
+     *
      * @return this context's server
      */
-    public HttpServer getServer () {
+    public HttpServer getServer() {
         return server.getWrapper();
     }
 
-    ServerImpl getServerImpl () {
+    ServerImpl getServerImpl() {
         return server;
     }
 
     /**
      * returns the protocol this context was created with
+     *
      * @return this context's path
      */
     public String getProtocol() {
@@ -131,29 +133,30 @@ class HttpContextImpl extends HttpContext {
      * Every attribute stored in this Map will be visible to
      * every HttpExchange processed by this context
      */
-    public Map<String,Object> getAttributes() {
+    public Map<String, Object> getAttributes() {
         return attributes;
     }
 
-    public List<Filter> getFilters () {
+    public List<Filter> getFilters() {
         return ufilters;
     }
 
-    List<Filter> getSystemFilters () {
+    List<Filter> getSystemFilters() {
         return sfilters;
     }
 
-    public Authenticator setAuthenticator (Authenticator auth) {
+    public Authenticator setAuthenticator(Authenticator auth) {
         Authenticator old = authenticator;
         authenticator = auth;
-        authfilter.setAuthenticator (auth);
+        authfilter.setAuthenticator(auth);
         return old;
     }
 
-    public Authenticator getAuthenticator () {
+    public Authenticator getAuthenticator() {
         return authenticator;
     }
-    Logger getLogger () {
+
+    Logger getLogger() {
         return server.getLogger();
     }
 }

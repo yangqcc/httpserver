@@ -46,6 +46,7 @@ class LogFilter extends Filter {
     /**
      * The filter's implementation, which is invoked by the serve r
      */
+    @Override
     public void doFilter (HttpExchange t, Filter.Chain chain) throws IOException
     {
         chain.doFilter (t);

@@ -24,9 +24,7 @@
 package org.jboss.com.sun.net.httpserver;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -42,6 +40,19 @@ import java.util.regex.Pattern;
 
 public class BZ1312064 {
 
+    public static void main(String[] args) throws IOException {
+        Handler handler = new Handler();
+        InetSocketAddress addr = new InetSocketAddress(80);
+        server = HttpServer.create(addr, 0);
+        HttpContext ctx = server.createContext("/test", handler);
+
+        authenticator = new SimpleAuthenticator();
+        ctx.setAuthenticator(authenticator);
+        executor = Executors.newCachedThreadPool();
+        server.setExecutor(executor);
+        server.start();
+    }
+
     private static HttpServer server;
     private static ExecutorService executor;
     private static SimpleAuthenticator authenticator;
@@ -52,27 +63,28 @@ public class BZ1312064 {
     }
 
     // set up one server instance for all tests to speed things up
-    @BeforeClass
-    public static void setUpServer() throws Exception {
+    //  @BeforeClass
+    @Test
+    public void setUpServer() throws Exception {
         Handler handler = new Handler();
-        InetSocketAddress addr = new InetSocketAddress (0);
-        server = HttpServer.create (addr, 0);
-        HttpContext ctx = server.createContext ("/test", handler);
+        InetSocketAddress addr = new InetSocketAddress(80);
+        server = HttpServer.create(addr, 0);
+        HttpContext ctx = server.createContext("/test", handler);
 
         authenticator = new SimpleAuthenticator();
-        ctx.setAuthenticator (authenticator);
+        ctx.setAuthenticator(authenticator);
         executor = Executors.newCachedThreadPool();
-        server.setExecutor (executor);
-        server.start ();
+        server.setExecutor(executor);
+        server.start();
     }
 
-    @AfterClass
+ /*   @AfterClass
     public static void shutDownServer() {
         server.stop(2);
         executor.shutdown();
-    }
+    }*/
 
-    @After
+   // @After
     public void cleanUpAllowedCredentials() {
         authenticator.purge();
     }
@@ -105,8 +117,8 @@ public class BZ1312064 {
     }
 
     private int makeCall(String username, String password, String userAgent, String encoding) throws IOException {
-        URL url = new URL ("http://localhost:"+server.getAddress().getPort()+"/test/foo.html");
-        HttpURLConnection urlc = (HttpURLConnection)url.openConnection ();
+        URL url = new URL("http://localhost:" + server.getAddress().getPort() + "/test/foo.html");
+        HttpURLConnection urlc = (HttpURLConnection) url.openConnection();
 
         final String encodedCredentials = Base64.byteArrayToBase64((username + ":" + password).getBytes(encoding));
         urlc.addRequestProperty("Authorization", "Basic " + encodedCredentials);
@@ -125,10 +137,10 @@ public class BZ1312064 {
         private Map<String, String> acceptedCredentials = new HashMap<String, String>();
 
         SimpleAuthenticator() {
-            super ("foobar@test.realm", Charset.forName("UTF-8"), BZ1312064.browserCharsetMap);
+            super("foobar@test.realm", Charset.forName("UTF-8"), BZ1312064.browserCharsetMap);
         }
 
-        public boolean checkCredentials (String username, String pw) {
+        public boolean checkCredentials(String username, String pw) {
             return acceptedCredentials.containsKey(username) && acceptedCredentials.get(username).equals(pw);
         }
 
@@ -142,10 +154,8 @@ public class BZ1312064 {
     }
 
     static class Handler implements HttpHandler {
-        public void handle (HttpExchange t)
-                throws IOException
-        {
-            t.sendResponseHeaders (200, -1);
+        public void handle(HttpExchange t) throws IOException {
+            t.sendResponseHeaders(200, -1);
             t.close();
         }
     }

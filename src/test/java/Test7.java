@@ -24,24 +24,16 @@
 /**
  * @test
  * @bug 6270015
- * @summary  Light weight HTTP server
+ * @summary Light weight HTTP server
  */
 
-import java.io.BufferedOutputStream;
+import org.jboss.com.sun.net.httpserver.*;
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
-import java.net.URL;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import org.jboss.com.sun.net.httpserver.Headers;
-import org.jboss.com.sun.net.httpserver.HttpContext;
-import org.jboss.com.sun.net.httpserver.HttpExchange;
-import org.jboss.com.sun.net.httpserver.HttpHandler;
-import org.jboss.com.sun.net.httpserver.HttpServer;
 
 /**
  * Test POST large file via chunked encoding (large chunks)
@@ -49,14 +41,15 @@ import org.jboss.com.sun.net.httpserver.HttpServer;
 
 public class Test7 extends Test {
 
-    public static void main (String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         Handler handler = new Handler();
-        InetSocketAddress addr = new InetSocketAddress (0);
-        HttpServer server = HttpServer.create (addr, 0);
-        HttpContext ctx = server.createContext ("/test", handler);
+        InetSocketAddress addr = new InetSocketAddress(80);
+        HttpServer server = HttpServer.create(addr, 0);
+        HttpContext ctx = server.createContext("/test", handler);
         ExecutorService executor = Executors.newCachedThreadPool();
-        server.setExecutor (executor);
-        server.start ();
+        server.setExecutor(executor);
+        server.start();
+/*
 
         URL url = new URL ("http://localhost:"+server.getAddress().getPort()+"/test/foo.html");
         System.out.print ("Test7: " );
@@ -80,6 +73,7 @@ public class Test7 extends Test {
         server.stop(2);
         executor.shutdown();
         System.out.println ("OK");
+*/
 
     }
 
@@ -88,25 +82,25 @@ public class Test7 extends Test {
 
     static class Handler implements HttpHandler {
         int invocation = 1;
-        public void handle (HttpExchange t)
-            throws IOException
-        {
+
+        public void handle(HttpExchange t)
+                throws IOException {
             InputStream is = t.getRequestBody();
             Headers map = t.getRequestHeaders();
             Headers rmap = t.getResponseHeaders();
-            int c, count=0;
-            while ((c=is.read ()) != -1) {
+            int c, count = 0;
+            while ((c = is.read()) != -1) {
                 if (c != (count % 100)) {
                     error = true;
                     break;
                 }
-                count ++;
+                count++;
             }
             if (count != SIZE) {
                 error = true;
             }
             is.close();
-            t.sendResponseHeaders (200, -1);
+            t.sendResponseHeaders(200, -1);
             t.close();
         }
     }

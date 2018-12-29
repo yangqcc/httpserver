@@ -25,20 +25,26 @@
 
 package org.jboss.sun.net.httpserver;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.util.Map;
-
 import org.jboss.com.sun.net.httpserver.HttpServer;
 import org.jboss.com.sun.net.httpserver.HttpsServer;
 import org.jboss.com.sun.net.httpserver.spi.HttpServerProvider;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.Map;
+
+/**
+ * @author yangqc
+ */
 public class DefaultHttpServerProvider extends HttpServerProvider {
-    public HttpServer createHttpServer (InetSocketAddress addr, int backlog, Map<String, String> configuration) throws IOException {
-        return new HttpServerImpl (addr, backlog, configuration);
+
+    @Override
+    public HttpServer createHttpServer(InetSocketAddress addr, int backlog, Map<String, String> configuration) throws IOException {
+        return new HttpServerImpl(addr, backlog, configuration);
     }
 
-    public HttpsServer createHttpsServer (InetSocketAddress addr, int backlog, Map<String, String> configuration) throws IOException {
-        return new HttpsServerImpl (addr, backlog, configuration);
+    @Override
+    public HttpsServer createHttpsServer(InetSocketAddress addr, int backlog, Map<String, String> configuration) throws IOException {
+        return new HttpsServerImpl(addr, backlog, configuration);
     }
 }

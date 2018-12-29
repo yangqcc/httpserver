@@ -1,4 +1,4 @@
-/*
+package com.yqc;/*
  * Copyright (c) 2005, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
@@ -33,15 +33,15 @@ public class SimpleSSLContext {
 
     SSLContext ssl;
 
-    SimpleSSLContext(String dir) throws IOException {
+    public SimpleSSLContext(String dir) throws IOException {
         try {
             String file = "C:\\Users\\hanke\\my.keystore";
-            char[] passphrase = "13465".toCharArray();
+            char[] passphrase = "123456".toCharArray();
             KeyStore ks = KeyStore.getInstance("JKS");
             ks.load(new FileInputStream(file), passphrase);
 
             KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-            kmf.init(ks, passphrase);
+            kmf.init(ks, "654321".toCharArray());
 
             TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
             tmf.init(ks);

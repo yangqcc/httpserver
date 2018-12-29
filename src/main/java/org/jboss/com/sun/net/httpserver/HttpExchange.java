@@ -42,12 +42,12 @@ import java.net.URI;
  * <ol><li>{@link #getRequestMethod()} to determine the command
  * <li>{@link #getRequestHeaders()} to examine the request headers (if needed)
  * <li>{@link #getRequestBody()} returns a {@link java.io.InputStream} for reading the request body.
- *     After reading the request body, the stream is close.
+ * After reading the request body, the stream is close.
  * <li>{@link #getResponseHeaders()} to set any response headers, except content-length
- * <li>{@link #sendResponseHeaders(int,long)} to send the response headers. Must be called before
+ * <li>{@link #sendResponseHeaders(int, long)} to send the response headers. Must be called before
  * next step.
  * <li>{@link #getResponseBody()} to get a {@link java.io.OutputStream} to send the response body.
- *      When the response body has been written, the stream must be closed to terminate the exchange.
+ * When the response body has been written, the stream must be closed to terminate the exchange.
  * </ol>
  * <b>Terminating exchanges</b>
  * <br>
@@ -60,16 +60,16 @@ import java.net.URI;
  * but may make the underlying TCP connection unusable for following exchanges.
  * The effect of failing to terminate an exchange is undefined, but will typically
  * result in resources failing to be freed/reused.
+ *
  * @since 1.6
  */
-
 public abstract class HttpExchange {
 
     public enum AttributeScope {
         CONTEXT, CONNECTION
     }
 
-    protected HttpExchange () {
+    protected HttpExchange() {
     }
 
     /**
@@ -82,9 +82,10 @@ public abstract class HttpExchange {
      * presented in the order that they were included in the request.
      * <p>
      * The keys in Map are case-insensitive.
+     *
      * @return a read-only Map which can be used to access request headers
      */
-    public abstract Headers getRequestHeaders () ;
+    public abstract Headers getRequestHeaders();
 
     /**
      * Returns a mutable Map into which the HTTP response headers can be stored
@@ -94,28 +95,31 @@ public abstract class HttpExchange {
      * (in the order that they should be included).
      * <p>
      * The keys in Map are case-insensitive.
+     *
      * @return a writable Map which can be used to set response headers.
      */
-    public abstract Headers getResponseHeaders () ;
+    public abstract Headers getResponseHeaders();
 
     /**
      * Get the request URI
      *
      * @return the request URI
      */
-    public abstract URI getRequestURI () ;
+    public abstract URI getRequestURI();
 
     /**
      * Get the request method
+     *
      * @return the request method
      */
-    public abstract String getRequestMethod ();
+    public abstract String getRequestMethod();
 
     /**
      * Get the HttpContext for this exchange
+     *
      * @return the HttpContext
      */
-    public abstract HttpContext getHttpContext ();
+    public abstract HttpContext getHttpContext();
 
     /**
      * Ends this exchange by doing the following in sequence:<p><ol>
@@ -123,7 +127,7 @@ public abstract class HttpExchange {
      * <li>close the response OutputStream, if not already closed. </li>
      * </ol>
      */
-    public abstract void close () ;
+    public abstract void close();
 
     /**
      * returns a stream from which the request body can be read.
@@ -133,13 +137,14 @@ public abstract class HttpExchange {
      * before all data has been read, then the close() call will
      * read and discard remaining data (up to an implementation specific
      * number of bytes).
+     *
      * @return the stream from which the request body can be read.
      */
-    public abstract InputStream getRequestBody () ;
+    public abstract InputStream getRequestBody();
 
     /**
      * returns a stream to which the response body must be
-     * written. {@link #sendResponseHeaders(int,long)}) must be called prior to calling
+     * written. {@link #sendResponseHeaders(int, long)}) must be called prior to calling
      * this method. Multiple calls to this method (for the same exchange)
      * will return the same stream. In order to correctly terminate
      * each exchange, the output stream must be closed, even if no
@@ -148,16 +153,17 @@ public abstract class HttpExchange {
      * Closing this stream implicitly
      * closes the InputStream returned from {@link #getRequestBody()}
      * (if it is not already closed).
-     * <P>
+     * <p>
      * If the call to sendResponseHeaders() specified a fixed response
      * body length, then the exact number of bytes specified in that
      * call must be written to this stream. If too many bytes are written,
      * then write() will throw an IOException. If too few bytes are written
      * then the stream close() will throw an IOException. In both cases,
      * the exchange is aborted and the underlying TCP connection closed.
+     *
      * @return the stream to which the response body is written
      */
-    public abstract OutputStream getResponseBody () ;
+    public abstract OutputStream getResponseBody();
 
 
     /**
@@ -174,43 +180,48 @@ public abstract class HttpExchange {
      * this is set to the apropriate value depending on the response length parameter.
      * <p>
      * This method must be called prior to calling {@link #getResponseBody()}.
-     * @param rCode the response code to send
+     *
+     * @param rCode          the response code to send
      * @param responseLength if > 0, specifies a fixed response body length
-     *        and that exact number of bytes must be written
-     *        to the stream acquired from getResponseBody(), or else
-     *        if equal to 0, then chunked encoding is used,
-     *        and an arbitrary number of bytes may be written.
-     *        if <= -1, then no response body length is specified and
-     *        no response body may be written.
+     *                       and that exact number of bytes must be written
+     *                       to the stream acquired from getResponseBody(), or else
+     *                       if equal to 0, then chunked encoding is used,
+     *                       and an arbitrary number of bytes may be written.
+     *                       if <= -1, then no response body length is specified and
+     *                       no response body may be written.
      * @see HttpExchange#getResponseBody()
      */
-    public abstract void sendResponseHeaders (int rCode, long responseLength) throws IOException ;
+    public abstract void sendResponseHeaders(int rCode, long responseLength) throws IOException;
 
     /**
      * Returns the address of the remote entity invoking this request
+     *
      * @return the InetSocketAddress of the caller
      */
-    public abstract InetSocketAddress getRemoteAddress ();
+    public abstract InetSocketAddress getRemoteAddress();
 
     /**
      * Returns the response code, if it has already been set
+     *
      * @return the response code, if available. <code>-1</code> if not available yet.
      */
-    public abstract int getResponseCode ();
+    public abstract int getResponseCode();
 
     /**
      * Returns the local address on which the request was received
+     *
      * @return the InetSocketAddress of the local interface
      */
-    public abstract InetSocketAddress getLocalAddress ();
+    public abstract InetSocketAddress getLocalAddress();
 
     /**
      * Returns the protocol string from the request in the form
      * <i>protocol/majorVersion.minorVersion</i>. For example,
      * "HTTP/1.1"
+     *
      * @return the protocol string from the request
      */
-    public abstract String getProtocol ();
+    public abstract String getProtocol();
 
     /**
      * Filter modules may store arbitrary objects with HttpExchange
@@ -219,18 +230,19 @@ public abstract class HttpExchange {
      * <p>
      * Each Filter class will document the attributes which they make
      * available.
+     *
      * @param name the name of the attribute to retrieve
      * @return the attribute object, or null if it does not exist
      * @throws NullPointerException if name is <code>null</code>
      */
-    public abstract Object getAttribute (String name) ;
+    public abstract Object getAttribute(String name);
 
     /**
      * A version getAttribute that allows a scope to be specified.
-     *
+     * <p>
      * The default getAttribute implementation assumes CONTEXT scope.
      *
-     * @param name the name of the attribute to retrieve
+     * @param name  the name of the attribute to retrieve
      * @param scope the scope of the attribute, i.e. CONTEXT or CONNECTION
      * @return the attribute object, or null if it does not exist
      */
@@ -243,12 +255,13 @@ public abstract class HttpExchange {
      * <p>
      * Each Filter class will document the attributes which they make
      * available.
-     * @param name the name to associate with the attribute value
+     *
+     * @param name  the name to associate with the attribute value
      * @param value the object to store as the attribute value. <code>null</code>
-     * value is permitted.
+     *              value is permitted.
      * @throws NullPointerException if name is <code>null</code>
      */
-    public abstract void setAttribute (String name, Object value) ;
+    public abstract void setAttribute(String name, Object value);
 
     /**
      * A version of setAttribute that allows a scope to be specified.
@@ -273,19 +286,21 @@ public abstract class HttpExchange {
      * call must wrap the original streams, and may be (but are not
      * required to be) sub-classes of {@link java.io.FilterInputStream}
      * and {@link java.io.FilterOutputStream}.
+     *
      * @param i the filtered input stream to set as this object's inputstream,
      *          or <code>null</code> if no change.
      * @param o the filtered output stream to set as this object's outputstream,
      *          or <code>null</code> if no change.
      */
-    public abstract void setStreams (InputStream i, OutputStream o);
+    public abstract void setStreams(InputStream i, OutputStream o);
 
 
     /**
      * If an authenticator is set on the HttpContext that owns this exchange,
      * then this method will return the {@link HttpPrincipal} that represents
      * the authenticated user for this HttpExchange.
+     *
      * @return the HttpPrincipal, or <code>null</code> if no authenticator is set.
      */
-    public abstract HttpPrincipal getPrincipal ();
+    public abstract HttpPrincipal getPrincipal();
 }

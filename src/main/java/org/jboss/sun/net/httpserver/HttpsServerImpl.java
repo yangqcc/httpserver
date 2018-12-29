@@ -25,78 +25,90 @@
 
 package org.jboss.sun.net.httpserver;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.util.Map;
-import java.util.concurrent.Executor;
-
 import org.jboss.com.sun.net.httpserver.HttpContext;
 import org.jboss.com.sun.net.httpserver.HttpHandler;
 import org.jboss.com.sun.net.httpserver.HttpsConfigurator;
 import org.jboss.com.sun.net.httpserver.HttpsServer;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.Map;
+import java.util.concurrent.Executor;
+
 public class HttpsServerImpl extends HttpsServer {
 
     ServerImpl server;
 
-    HttpsServerImpl () throws IOException {
-        this (new InetSocketAddress(443), 0);
+    HttpsServerImpl() throws IOException {
+        this(new InetSocketAddress(443), 0);
     }
 
-    HttpsServerImpl (
-        InetSocketAddress addr, int backlog
+    HttpsServerImpl(
+            InetSocketAddress addr, int backlog
     ) throws IOException {
         this(addr, backlog, null);
     }
-    
+
     HttpsServerImpl(InetSocketAddress addr, int backlog, Map<String, String> configuration) throws IOException {
         server = new ServerImpl(this, "https", addr, backlog, configuration);
-    }    
-
-    public void setHttpsConfigurator (HttpsConfigurator config) {
-        server.setHttpsConfigurator (config);
     }
 
-    public HttpsConfigurator getHttpsConfigurator () {
+    @Override
+    public void setHttpsConfigurator(HttpsConfigurator config) {
+        server.setHttpsConfigurator(config);
+    }
+
+    @Override
+    public HttpsConfigurator getHttpsConfigurator() {
         return server.getHttpsConfigurator();
     }
 
-    public void bind (InetSocketAddress addr, int backlog) throws IOException {
-        server.bind (addr, backlog);
+    @Override
+    public void bind(InetSocketAddress addr, int backlog) throws IOException {
+        server.bind(addr, backlog);
     }
 
-    public void start () {
+    @Override
+    public void start() {
         server.start();
     }
 
-    public void setExecutor (Executor executor) {
+    @Override
+    public void setExecutor(Executor executor) {
         server.setExecutor(executor);
     }
 
-    public Executor getExecutor () {
+    @Override
+    public Executor getExecutor() {
         return server.getExecutor();
     }
 
-    public void stop (int delay) {
-        server.stop (delay);
+    @Override
+    public void stop(int delay) {
+        server.stop(delay);
     }
 
-    public HttpContextImpl createContext (String path, HttpHandler handler) {
-        return server.createContext (path, handler);
+    @Override
+    public HttpContextImpl createContext(String path, HttpHandler handler) {
+        return server.createContext(path, handler);
     }
 
-    public HttpContextImpl createContext (String path) {
-        return server.createContext (path);
+    @Override
+    public HttpContextImpl createContext(String path) {
+        return server.createContext(path);
     }
 
-    public void removeContext (String path) throws IllegalArgumentException {
-        server.removeContext (path);
+    @Override
+    public void removeContext(String path) throws IllegalArgumentException {
+        server.removeContext(path);
     }
 
-    public void removeContext (HttpContext context) throws IllegalArgumentException {
-        server.removeContext (context);
+    @Override
+    public void removeContext(HttpContext context) throws IllegalArgumentException {
+        server.removeContext(context);
     }
 
+    @Override
     public InetSocketAddress getAddress() {
         return server.getAddress();
     }

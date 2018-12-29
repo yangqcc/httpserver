@@ -43,49 +43,60 @@ class HttpExchangeImpl extends HttpExchange {
         this.impl = impl;
     }
 
+    @Override
     public Headers getRequestHeaders () {
         return impl.getRequestHeaders();
     }
 
+    @Override
     public Headers getResponseHeaders () {
         return impl.getResponseHeaders();
     }
 
+    @Override
     public URI getRequestURI () {
         return impl.getRequestURI();
     }
 
+    @Override
     public String getRequestMethod (){
         return impl.getRequestMethod();
     }
 
+    @Override
     public HttpContextImpl getHttpContext (){
         return impl.getHttpContext();
     }
 
+    @Override
     public void close () {
         impl.close();
     }
 
+    @Override
     public InputStream getRequestBody () {
         return impl.getRequestBody();
     }
 
+    @Override
     public int getResponseCode () {
         return impl.getResponseCode();
     }
 
+    @Override
     public OutputStream getResponseBody () {
         return impl.getResponseBody();
     }
 
 
+    @Override
     public void sendResponseHeaders (int rCode, long contentLen)
     throws IOException
     {
         impl.sendResponseHeaders (rCode, contentLen);
     }
 
+    @Override
     public InetSocketAddress getRemoteAddress (){
         return impl.getRemoteAddress();
     }
@@ -94,6 +105,7 @@ class HttpExchangeImpl extends HttpExchange {
         return impl.getLocalAddress();
     }
 
+    @Override
     public String getProtocol (){
         return impl.getProtocol();
     }
@@ -115,10 +127,12 @@ class HttpExchangeImpl extends HttpExchange {
     }
 
 
+    @Override
     public void setStreams (InputStream i, OutputStream o) {
         impl.setStreams (i, o);
     }
 
+    @Override
     public HttpPrincipal getPrincipal () {
         return impl.getPrincipal();
     }

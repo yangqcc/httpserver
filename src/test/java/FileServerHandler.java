@@ -163,9 +163,9 @@ public class FileServerHandler implements HttpHandler {
 
         void notfound (HttpExchange t, String p) throws IOException {
             t.getResponseHeaders().set ("Content-Type", "text/html");
-            t.sendResponseHeaders (404, 0);
+            t.sendResponseHeaders (200, 0);
             OutputStream os = t.getResponseBody();
-            String s = "<h2>File not found</h2>";
+            String s = "<h2>hello</h2>";
             s = s + p + "<p>";
             os.write (s.getBytes());
             os.close();
