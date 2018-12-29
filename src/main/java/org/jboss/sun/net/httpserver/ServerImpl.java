@@ -53,12 +53,13 @@ class ServerImpl implements TimeSource {
     private SSLContext sslContext;
     private ContextList contexts;
     private InetSocketAddress address;
-    private ServerSocketChannel schan;
+    private ServerSocketChannel serverSocketChannel;
     private Selector selector;
     private SelectionKey listenerKey;
     private Set<HttpConnection> idleConnections;
     private Set<HttpConnection> allConnections;
-    /* following two are used to keep track of the times
+    /**
+     * following two are used to keep track of the times
      * when a connection/request is first received
      * and when we start to send the response
      */
@@ -88,9 +89,7 @@ class ServerImpl implements TimeSource {
     private Timer timer, timer1;
     private Logger logger;
 
-    ServerImpl(
-            HttpServer wrapper, String protocol, InetSocketAddress addr, int backlog
-    ) throws IOException {
+    ServerImpl(HttpServer wrapper, String protocol, InetSocketAddress addr, int backlog) throws IOException {
         this(wrapper, protocol, addr, backlog, null);
     }
 
@@ -115,20 +114,20 @@ class ServerImpl implements TimeSource {
         https = protocol.equalsIgnoreCase("https");
         this.address = addr;
         contexts = new ContextList();
-        schan = ServerSocketChannel.open();
+        serverSocketChannel = ServerSocketChannel.open();
         if (addr != null) {
-            ServerSocket socket = schan.socket();
+            ServerSocket socket = serverSocketChannel.socket();
             socket.bind(addr, backlog);
             bound = true;
         }
         selector = Selector.open();
-        schan.configureBlocking(false);
-        listenerKey = schan.register(selector, SelectionKey.OP_ACCEPT);
+        serverSocketChannel.configureBlocking(false);
+        listenerKey = serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
         dispatcher = new Dispatcher();
-        idleConnections = Collections.synchronizedSet(new HashSet<HttpConnection>());
-        allConnections = Collections.synchronizedSet(new HashSet<HttpConnection>());
-        reqConnections = Collections.synchronizedSet(new HashSet<HttpConnection>());
-        rspConnections = Collections.synchronizedSet(new HashSet<HttpConnection>());
+        idleConnections = Collections.synchronizedSet(new HashSet<>());
+        allConnections = Collections.synchronizedSet(new HashSet<>());
+        reqConnections = Collections.synchronizedSet(new HashSet<>());
+        rspConnections = Collections.synchronizedSet(new HashSet<>());
         time = System.currentTimeMillis();
         timer = new Timer("server-timer", true);
         timer.schedule(new ServerTimerTask(), clockTick, clockTick);
@@ -139,7 +138,7 @@ class ServerImpl implements TimeSource {
             logger.config("MAX_REQ_TIME:  " + maxReqTime);
             logger.config("MAX_RSP_TIME:  " + maxRspTime);
         }
-        events = new LinkedList<Event>();
+        events = new LinkedList<>();
         logger.config("HttpServer created " + protocol + " " + addr);
     }
 
@@ -150,7 +149,7 @@ class ServerImpl implements TimeSource {
         if (addr == null) {
             throw new NullPointerException("null address");
         }
-        ServerSocket socket = schan.socket();
+        ServerSocket socket = serverSocketChannel.socket();
         socket.bind(addr, backlog);
         bound = true;
     }
@@ -209,7 +208,7 @@ class ServerImpl implements TimeSource {
         }
         terminating = true;
         try {
-            schan.close();
+            serverSocketChannel.close();
         } catch (IOException e) {
         }
         selector.wakeup();
@@ -274,7 +273,7 @@ class ServerImpl implements TimeSource {
     }
 
     public InetSocketAddress getAddress() {
-        return (InetSocketAddress) schan.socket().getLocalSocketAddress();
+        return (InetSocketAddress) serverSocketChannel.socket().getLocalSocketAddress();
     }
 
     Selector getSelector() {
@@ -288,8 +287,9 @@ class ServerImpl implements TimeSource {
         }
     }
 
-    /* main server listener task */
-
+    /**
+     * main server listener task
+     */
     class Dispatcher implements Runnable {
 
         private void handleEvent(Event r) {
@@ -347,10 +347,10 @@ class ServerImpl implements TimeSource {
             }
         }
 
+        @Override
         public void run() {
             while (!finished) {
                 try {
-                    ListIterator<HttpConnection> li = connsToRegister.listIterator();
                     for (HttpConnection c : connsToRegister) {
                         reRegister(c);
                     }
@@ -372,7 +372,6 @@ class ServerImpl implements TimeSource {
                     }
 
                     /* process the selected list now  */
-
                     Set<SelectionKey> selected = selector.selectedKeys();
                     Iterator<SelectionKey> iter = selected.iterator();
                     while (iter.hasNext()) {
@@ -382,7 +381,7 @@ class ServerImpl implements TimeSource {
                             if (terminating) {
                                 continue;
                             }
-                            SocketChannel socketChannel = schan.accept();
+                            SocketChannel socketChannel = serverSocketChannel.accept();
                             if (socketChannel == null) {
                                 continue; /* cancel something ? */
                             }
@@ -393,6 +392,7 @@ class ServerImpl implements TimeSource {
                             c.setChannel(socketChannel);
                             newKey.attach(c);
                             requestStarted(c);
+                            //添加connection
                             allConnections.add(c);
                         } else {
                             try {
@@ -745,6 +745,7 @@ class ServerImpl implements TimeSource {
         return ticks;
     }
 
+    @Override
     public long getTime() {
         return time;
     }

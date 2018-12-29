@@ -99,6 +99,7 @@ class HttpContextImpl extends HttpContext {
      *
      * @return this context's path
      */
+    @Override
     public String getPath() {
         return path;
     }
@@ -108,6 +109,7 @@ class HttpContextImpl extends HttpContext {
      *
      * @return this context's server
      */
+    @Override
     public HttpServer getServer() {
         return server.getWrapper();
     }
@@ -133,10 +135,12 @@ class HttpContextImpl extends HttpContext {
      * Every attribute stored in this Map will be visible to
      * every HttpExchange processed by this context
      */
+    @Override
     public Map<String, Object> getAttributes() {
         return attributes;
     }
 
+    @Override
     public List<Filter> getFilters() {
         return ufilters;
     }
@@ -145,6 +149,7 @@ class HttpContextImpl extends HttpContext {
         return sfilters;
     }
 
+    @Override
     public Authenticator setAuthenticator(Authenticator auth) {
         Authenticator old = authenticator;
         authenticator = auth;

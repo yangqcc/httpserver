@@ -51,7 +51,7 @@ class HttpConnection {
     /**
      * high level streams returned to application
      */
-    InputStream i;
+    InputStream inputStream;
 
     /**
      * low level stream that sits directly over channel
@@ -63,8 +63,10 @@ class HttpConnection {
     SelectionKey selectionKey;
     private String protocol;
     long time;
-    volatile long creationTime; // time this connection was created
-    volatile long rspStartedTime; // time we started writing the response
+    // time this connection was created
+    volatile long creationTime;
+    // time we started writing the response
+    volatile long rspStartedTime;
     private int remaining;
     boolean closed = false;
     private Logger logger;
@@ -76,6 +78,7 @@ class HttpConnection {
     private final Map<String, Object> attributes = new HashMap<String, Object>();
     private final ServerImpl server;
 
+    @Override
     public String toString() {
         String s = null;
         if (chan != null) {
@@ -110,7 +113,7 @@ class HttpConnection {
             HttpContextImpl context, InputStream raw
     ) {
         this.context = context;
-        this.i = in;
+        this.inputStream = in;
         this.rawout = rawout;
         this.raw = raw;
         this.protocol = protocol;
@@ -167,7 +170,8 @@ class HttpConnection {
         }
     }
 
-    /* remaining is the number of bytes left on the lowest level inputstream
+    /**
+     * remaining is the number of bytes left on the lowest level inputstream
      * after the exchange is finished
      */
     void setRemaining(int r) {
@@ -183,7 +187,7 @@ class HttpConnection {
     }
 
     InputStream getInputStream() {
-        return i;
+        return inputStream;
     }
 
     OutputStream getRawOutputStream() {
