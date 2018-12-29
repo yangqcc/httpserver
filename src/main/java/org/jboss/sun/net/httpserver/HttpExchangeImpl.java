@@ -25,119 +25,122 @@
 
 package org.jboss.sun.net.httpserver;
 
+import org.jboss.com.sun.net.httpserver.Headers;
+import org.jboss.com.sun.net.httpserver.HttpExchange;
+import org.jboss.com.sun.net.httpserver.HttpPrincipal;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
 
-import org.jboss.com.sun.net.httpserver.Headers;
-import org.jboss.com.sun.net.httpserver.HttpExchange;
-import org.jboss.com.sun.net.httpserver.HttpPrincipal;
-
 class HttpExchangeImpl extends HttpExchange {
 
     ExchangeImpl impl;
 
-    HttpExchangeImpl (ExchangeImpl impl) {
+    HttpExchangeImpl(ExchangeImpl impl) {
         this.impl = impl;
     }
 
     @Override
-    public Headers getRequestHeaders () {
+    public Headers getRequestHeaders() {
         return impl.getRequestHeaders();
     }
 
     @Override
-    public Headers getResponseHeaders () {
+    public Headers getResponseHeaders() {
         return impl.getResponseHeaders();
     }
 
     @Override
-    public URI getRequestURI () {
+    public URI getRequestURI() {
         return impl.getRequestURI();
     }
 
     @Override
-    public String getRequestMethod (){
+    public String getRequestMethod() {
         return impl.getRequestMethod();
     }
 
     @Override
-    public HttpContextImpl getHttpContext (){
+    public HttpContextImpl getHttpContext() {
         return impl.getHttpContext();
     }
 
     @Override
-    public void close () {
+    public void close() {
         impl.close();
     }
 
     @Override
-    public InputStream getRequestBody () {
+    public InputStream getRequestBody() {
         return impl.getRequestBody();
     }
 
     @Override
-    public int getResponseCode () {
+    public int getResponseCode() {
         return impl.getResponseCode();
     }
 
     @Override
-    public OutputStream getResponseBody () {
+    public OutputStream getResponseBody() {
         return impl.getResponseBody();
     }
 
 
     @Override
-    public void sendResponseHeaders (int rCode, long contentLen)
-    throws IOException
-    {
-        impl.sendResponseHeaders (rCode, contentLen);
+    public void sendResponseHeaders(int rCode, long contentLen)
+            throws IOException {
+        impl.sendResponseHeaders(rCode, contentLen);
     }
 
     @Override
-    public InetSocketAddress getRemoteAddress (){
+    public InetSocketAddress getRemoteAddress() {
         return impl.getRemoteAddress();
     }
 
-    public InetSocketAddress getLocalAddress (){
+    @Override
+    public InetSocketAddress getLocalAddress() {
         return impl.getLocalAddress();
     }
 
     @Override
-    public String getProtocol (){
+    public String getProtocol() {
         return impl.getProtocol();
     }
 
-    public Object getAttribute (String name) {
-        return impl.getAttribute (name);
+    @Override
+    public Object getAttribute(String name) {
+        return impl.getAttribute(name);
     }
 
+    @Override
     public Object getAttribute(String name, HttpExchange.AttributeScope scope) {
         return impl.getAttribute(name, scope);
     }
 
-    public void setAttribute (String name, Object value) {
-        impl.setAttribute (name, value);
+    @Override
+    public void setAttribute(String name, Object value) {
+        impl.setAttribute(name, value);
     }
 
+    @Override
     public void setAttribute(String name, Object value, HttpExchange.AttributeScope scope) {
         impl.setAttribute(name, value, scope);
     }
 
-
     @Override
-    public void setStreams (InputStream i, OutputStream o) {
-        impl.setStreams (i, o);
+    public void setStreams(InputStream i, OutputStream o) {
+        impl.setStreams(i, o);
     }
 
     @Override
-    public HttpPrincipal getPrincipal () {
+    public HttpPrincipal getPrincipal() {
         return impl.getPrincipal();
     }
 
-    ExchangeImpl getExchangeImpl () {
+    ExchangeImpl getExchangeImpl() {
         return impl;
     }
 }

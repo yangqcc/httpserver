@@ -59,7 +59,7 @@ class SSLStreams {
      */
     private Lock handshaking = new ReentrantLock();
 
-    SSLStreams(ServerImpl server, SSLContext sslCtx, SocketChannel socketChannel) throws IOException {
+    SSLStreams(ServerImpl server, SSLContext sslCtx, SocketChannel socketChannel) {
         this.server = server;
         this.time = server;
         this.sslctx = sslCtx;
@@ -81,15 +81,13 @@ class SSLStreams {
             SSLParameters sslParams = params.getSSLParameters();
             if (sslParams != null) {
                 engine.setSSLParameters(sslParams);
-            } else
+            }
             //END_TIGER_EXCLUDE
-            {
+            else {
                 /* tiger compatibility */
                 if (params.getCipherSuites() != null) {
                     try {
-                        engine.setEnabledCipherSuites(
-                                params.getCipherSuites()
-                        );
+                        engine.setEnabledCipherSuites(params.getCipherSuites());
                     } catch (IllegalArgumentException e) { /* LOG */}
                 }
                 if (params.getNeedClientAuth()) {
@@ -100,9 +98,7 @@ class SSLStreams {
                 }
                 if (params.getProtocols() != null) {
                     try {
-                        engine.setEnabledProtocols(
-                                params.getProtocols()
-                        );
+                        engine.setEnabledProtocols(params.getProtocols());
                     } catch (IllegalArgumentException e) { /* LOG */}
                 }
             }
@@ -185,20 +181,22 @@ class SSLStreams {
     class WrapperResult {
         SSLEngineResult result;
 
-        /* if passed in buffer was not big enough then the
+        /**
+         * if passed in buffer was not big enough then the
          * a reallocated buffer is returned here
          */
         ByteBuffer buf;
     }
 
-    int app_buf_size;
-    int packet_buf_size;
+    private int appBufSize;
+    private int packetBufSize;
 
     enum BufType {
+        /**
+         * 网络包
+         */
         PACKET, APPLICATION
     }
-
-    ;
 
     private ByteBuffer allocate(BufType type) {
         return allocate(type, -1);
@@ -209,40 +207,41 @@ class SSLStreams {
         synchronized (this) {
             int size;
             if (type == BufType.PACKET) {
-                if (packet_buf_size == 0) {
+                if (packetBufSize == 0) {
                     SSLSession sess = engine.getSession();
-                    packet_buf_size = sess.getPacketBufferSize();
+                    packetBufSize = sess.getPacketBufferSize();
                 }
-                if (len > packet_buf_size) {
-                    packet_buf_size = len;
+                if (len > packetBufSize) {
+                    packetBufSize = len;
                 }
-                size = packet_buf_size;
+                size = packetBufSize;
             } else {
-                if (app_buf_size == 0) {
+                if (appBufSize == 0) {
                     SSLSession sess = engine.getSession();
-                    app_buf_size = sess.getApplicationBufferSize();
+                    appBufSize = sess.getApplicationBufferSize();
                 }
-                if (len > app_buf_size) {
-                    app_buf_size = len;
+                if (len > appBufSize) {
+                    appBufSize = len;
                 }
-                size = app_buf_size;
+                size = appBufSize;
             }
             return ByteBuffer.allocate(size);
         }
     }
 
-    /* reallocates the buffer by :-
+    /**
+     * reallocates the buffer by :-
      * 1. creating a new buffer double the size of the old one
      * 2. putting the contents of the old buffer into the new one
      * 3. set xx_buf_size to the new size if it was smaller than new size
-     *
+     * <p>
      * flip is set to true if the old buffer needs to be flipped
      * before it is copied.
      */
     private ByteBuffer realloc(ByteBuffer b, boolean flip, BufType type) {
         synchronized (this) {
-            int nsize = 2 * b.capacity();
-            ByteBuffer n = allocate(type, nsize);
+            int nSize = 2 * b.capacity();
+            ByteBuffer n = allocate(type, nSize);
             if (flip) {
                 b.flip();
             }
@@ -263,21 +262,23 @@ class SSLStreams {
      */
     class EngineWrapper {
 
-        SocketChannel chan;
+        SocketChannel socketChannel;
         SSLEngine engine;
-        Object wrapLock, unwrapLock;
-        ByteBuffer unwrap_src, wrap_dst;
+        final Object wrapLock, unwrapLock;
+        ByteBuffer unwrapSrc, wrapDst;
         boolean closed = false;
-        // the number of bytes left in unwrap_src after an unwrap()
-        int u_remaining;
+        /**
+         * the number of bytes left in unwrapSrc after an unwrap()
+         */
+        int uRemaining;
 
-        EngineWrapper(SocketChannel chan, SSLEngine engine) throws IOException {
-            this.chan = chan;
+        EngineWrapper(SocketChannel socketChannel, SSLEngine engine) {
+            this.socketChannel = socketChannel;
             this.engine = engine;
             wrapLock = new Object();
             unwrapLock = new Object();
-            unwrap_src = allocate(BufType.PACKET);
-            wrap_dst = allocate(BufType.PACKET);
+            unwrapSrc = allocate(BufType.PACKET);
+            wrapDst = allocate(BufType.PACKET);
         }
 
         void close() {
@@ -300,12 +301,12 @@ class SSLStreams {
             Status status;
             WrapperResult r = new WrapperResult();
             synchronized (wrapLock) {
-                wrap_dst.clear();
+                wrapDst.clear();
                 do {
-                    r.result = engine.wrap(src, wrap_dst);
+                    r.result = engine.wrap(src, wrapDst);
                     status = r.result.getStatus();
                     if (status == Status.BUFFER_OVERFLOW) {
-                        wrap_dst = realloc(wrap_dst, true, BufType.PACKET);
+                        wrapDst = realloc(wrapDst, true, BufType.PACKET);
                     }
                 } while (status == Status.BUFFER_OVERFLOW);
                 if (status == Status.CLOSED && !ignoreClose) {
@@ -313,11 +314,11 @@ class SSLStreams {
                     return r;
                 }
                 if (r.result.bytesProduced() > 0) {
-                    wrap_dst.flip();
-                    int l = wrap_dst.remaining();
+                    wrapDst.flip();
+                    int l = wrapDst.remaining();
                     //DISABLED assert l == r.result.bytesProduced();
                     while (l > 0) {
-                        l -= chan.write(wrap_dst);
+                        l -= socketChannel.write(wrapDst);
                     }
                 }
             }
@@ -338,12 +339,12 @@ class SSLStreams {
                 throw new IOException("Engine is closed");
             }
             boolean needData;
-            if (u_remaining > 0) {
-                unwrap_src.compact();
-                unwrap_src.flip();
+            if (uRemaining > 0) {
+                unwrapSrc.compact();
+                unwrapSrc.flip();
                 needData = false;
             } else {
-                unwrap_src.clear();
+                unwrapSrc.clear();
                 needData = true;
             }
             synchronized (unwrapLock) {
@@ -351,28 +352,27 @@ class SSLStreams {
                 do {
                     if (needData) {
                         do {
-                            x = chan.read(unwrap_src);
+                            x = socketChannel.read(unwrapSrc);
                         } while (x == 0);
                         if (x == -1) {
                             throw new IOException("connection closed for reading");
                         }
-                        unwrap_src.flip();
+                        unwrapSrc.flip();
                     }
-                    r.result = engine.unwrap(unwrap_src, r.buf);
+                    r.result = engine.unwrap(unwrapSrc, r.buf);
                     status = r.result.getStatus();
                     if (status == Status.BUFFER_UNDERFLOW) {
-                        if (unwrap_src.limit() == unwrap_src.capacity()) {
+                        if (unwrapSrc.limit() == unwrapSrc.capacity()) {
                             /* buffer not big enough */
-                            unwrap_src = realloc(
-                                    unwrap_src, false, BufType.PACKET
+                            unwrapSrc = realloc(unwrapSrc, false, BufType.PACKET
                             );
                         } else {
                             /* Buffer not full, just need to read more
                              * data off the channel. Reset pointers
                              * for reading off SocketChannel
                              */
-                            unwrap_src.position(unwrap_src.limit());
-                            unwrap_src.limit(unwrap_src.capacity());
+                            unwrapSrc.position(unwrapSrc.limit());
+                            unwrapSrc.limit(unwrapSrc.capacity());
                         }
                         needData = true;
                     } else if (status == Status.BUFFER_OVERFLOW) {
@@ -385,7 +385,7 @@ class SSLStreams {
                     }
                 } while (status != Status.OK);
             }
-            u_remaining = unwrap_src.remaining();
+            uRemaining = unwrapSrc.remaining();
             return r;
         }
     }
@@ -433,10 +433,10 @@ class SSLStreams {
                 return r;
             }
 
-            HandshakeStatus hs_status = r.result.getHandshakeStatus();
-            if (hs_status != HandshakeStatus.FINISHED &&
-                    hs_status != HandshakeStatus.NOT_HANDSHAKING) {
-                doHandshake(hs_status);
+            HandshakeStatus hsStatus = r.result.getHandshakeStatus();
+            if (hsStatus != HandshakeStatus.FINISHED &&
+                    hsStatus != HandshakeStatus.NOT_HANDSHAKING) {
+                doHandshake(hsStatus);
             }
         }
         dst.flip();
@@ -447,7 +447,7 @@ class SSLStreams {
      * we've received a close notify. Need to call wrap to send
      * the response
      */
-    void doClosure() throws IOException {
+    private void doClosure() throws IOException {
         try {
             handshaking.lock();
             ByteBuffer tmp = allocate(BufType.APPLICATION);
@@ -468,14 +468,14 @@ class SSLStreams {
      * on the wrapper methods being idempotent. eg. if wrapAndSend()
      * is called with no data to send then there must be no problem
      */
-    void doHandshake(HandshakeStatus hs_status) throws IOException {
+    private void doHandshake(HandshakeStatus handshakeStatus) throws IOException {
         try {
             handshaking.lock();
             ByteBuffer tmp = allocate(BufType.APPLICATION);
-            while (hs_status != HandshakeStatus.FINISHED &&
-                    hs_status != HandshakeStatus.NOT_HANDSHAKING) {
+            while (handshakeStatus != HandshakeStatus.FINISHED &&
+                    handshakeStatus != HandshakeStatus.NOT_HANDSHAKING) {
                 WrapperResult r = null;
-                switch (hs_status) {
+                switch (handshakeStatus) {
                     case NEED_TASK:
                         Runnable task;
                         while ((task = engine.getDelegatedTask()) != null) {
@@ -499,8 +499,10 @@ class SSLStreams {
                         }
                         //DISABLED assert tmp.position() == 0;
                         break;
+                    default:
+                        break;
                 }
-                hs_status = r.result.getHandshakeStatus();
+                handshakeStatus = r.result.getHandshakeStatus();
             }
         } finally {
             handshaking.unlock();
@@ -514,7 +516,7 @@ class SSLStreams {
      */
     class InputStream extends java.io.InputStream {
 
-        ByteBuffer bbuf;
+        ByteBuffer buf;
         boolean closed = false;
 
         /**
@@ -525,7 +527,7 @@ class SSLStreams {
         boolean needData = true;
 
         InputStream() {
-            bbuf = allocate(BufType.APPLICATION);
+            buf = allocate(BufType.APPLICATION);
         }
 
         @Override
@@ -538,14 +540,14 @@ class SSLStreams {
             }
             int available = 0;
             if (!needData) {
-                available = bbuf.remaining();
+                available = this.buf.remaining();
                 needData = (available == 0);
             }
             if (needData) {
-                bbuf.clear();
-                WrapperResult r = recvData(bbuf);
-                bbuf = r.buf == bbuf ? bbuf : r.buf;
-                if ((available = bbuf.remaining()) == 0) {
+                this.buf.clear();
+                WrapperResult r = recvData(this.buf);
+                this.buf = r.buf == this.buf ? this.buf : r.buf;
+                if ((available = this.buf.remaining()) == 0) {
                     eof = true;
                     return -1;
                 } else {
@@ -556,13 +558,13 @@ class SSLStreams {
             if (len > available) {
                 len = available;
             }
-            bbuf.get(buf, off, len);
+            this.buf.get(buf, off, len);
             return len;
         }
 
         @Override
         public int available() {
-            return bbuf.remaining();
+            return buf.remaining();
         }
 
         @Override
@@ -587,14 +589,14 @@ class SSLStreams {
             }
             int ret = n;
             while (n > 0) {
-                if (bbuf.remaining() >= n) {
-                    bbuf.position(bbuf.position() + n);
+                if (buf.remaining() >= n) {
+                    buf.position(buf.position() + n);
                     return ret;
                 } else {
-                    n -= bbuf.remaining();
-                    bbuf.clear();
-                    WrapperResult r = recvData(bbuf);
-                    bbuf = r.buf == bbuf ? bbuf : r.buf;
+                    n -= buf.remaining();
+                    buf.clear();
+                    WrapperResult r = recvData(buf);
+                    buf = r.buf;
                 }
             }
             /* not reached */
@@ -638,7 +640,7 @@ class SSLStreams {
     class OutputStream extends java.io.OutputStream {
         ByteBuffer buf;
         boolean closed = false;
-        byte single[] = new byte[1];
+        byte[] single = new byte[1];
 
         OutputStream() {
             buf = allocate(BufType.APPLICATION);
@@ -651,12 +653,12 @@ class SSLStreams {
         }
 
         @Override
-        public void write(byte b[]) throws IOException {
+        public void write(byte[] b) throws IOException {
             write(b, 0, b.length);
         }
 
         @Override
-        public void write(byte b[], int off, int len) throws IOException {
+        public void write(byte[] b, int off, int len) throws IOException {
             if (closed) {
                 throw new IOException("output stream is closed");
             }
@@ -678,13 +680,13 @@ class SSLStreams {
         }
 
         @Override
-        public void flush() throws IOException {
+        public void flush() {
             /* no-op */
         }
 
         @Override
         public void close() throws IOException {
-            WrapperResult r = null;
+            WrapperResult r;
             engine.closeOutbound();
             closed = true;
             HandshakeStatus stat = HandshakeStatus.NEED_WRAP;

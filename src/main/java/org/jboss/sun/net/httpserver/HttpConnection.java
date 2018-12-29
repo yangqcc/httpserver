@@ -43,31 +43,37 @@ import java.util.logging.Logger;
  */
 class HttpConnection {
 
-    HttpContextImpl context;
-    SSLEngine engine;
-    SSLContext sslContext;
+    private HttpContextImpl context;
+    private SSLEngine engine;
+    private SSLContext sslContext;
     SSLStreams sslStreams;
 
-    /* high level streams returned to application */
+    /**
+     * high level streams returned to application
+     */
     InputStream i;
 
-    /* low level stream that sits directly over channel */
+    /**
+     * low level stream that sits directly over channel
+     */
     InputStream raw;
     OutputStream rawout;
 
-    SocketChannel chan;
+    private SocketChannel chan;
     SelectionKey selectionKey;
-    String protocol;
+    private String protocol;
     long time;
     volatile long creationTime; // time this connection was created
     volatile long rspStartedTime; // time we started writing the response
-    int remaining;
+    private int remaining;
     boolean closed = false;
-    Logger logger;
+    private Logger logger;
 
-    public enum State {IDLE, REQUEST, RESPONSE};
+    public enum State {IDLE, REQUEST, RESPONSE}
+
+    ;
     volatile State state;
-    private final Map<String,Object> attributes = new HashMap<String,Object>();
+    private final Map<String, Object> attributes = new HashMap<String, Object>();
     private final ServerImpl server;
 
     public String toString() {
@@ -78,15 +84,15 @@ class HttpConnection {
         return s;
     }
 
-    HttpConnection (ServerImpl server) {
+    HttpConnection(ServerImpl server) {
         this.server = server;
     }
 
-    void setChannel (SocketChannel c) {
+    void setChannel(SocketChannel c) {
         chan = c;
     }
 
-    void setContext (HttpContextImpl ctx) {
+    void setContext(HttpContextImpl ctx) {
         context = ctx;
     }
 
@@ -94,16 +100,15 @@ class HttpConnection {
         return state;
     }
 
-    void setState (State s) {
+    void setState(State s) {
         state = s;
     }
 
-    void setParameters (
-        InputStream in, OutputStream rawout, SocketChannel chan,
-        SSLEngine engine, SSLStreams sslStreams, SSLContext sslContext, String protocol,
-        HttpContextImpl context, InputStream raw
-    )
-    {
+    void setParameters(
+            InputStream in, OutputStream rawout, SocketChannel chan,
+            SSLEngine engine, SSLStreams sslStreams, SSLContext sslContext, String protocol,
+            HttpContextImpl context, InputStream raw
+    ) {
         this.context = context;
         this.i = in;
         this.rawout = rawout;
@@ -116,21 +121,21 @@ class HttpConnection {
         this.logger = context.getLogger();
     }
 
-    SocketChannel getChannel () {
+    SocketChannel getChannel() {
         return chan;
     }
 
-    synchronized void close () {
+    synchronized void close() {
         if (closed) {
             return;
         }
         closed = true;
         if (logger != null && chan != null) {
-            logger.finest ("Closing connection: " + chan.toString());
+            logger.finest("Closing connection: " + chan.toString());
         }
 
         if (!chan.isOpen()) {
-            server.dprint ("Channel already closed");
+            server.dPrint("Channel already closed");
             return;
         }
         try {
@@ -139,66 +144,66 @@ class HttpConnection {
                 raw.close();
             }
         } catch (IOException e) {
-            server.dprint (e);
+            server.dPrint(e);
         }
         try {
             if (rawout != null) {
                 rawout.close();
             }
         } catch (IOException e) {
-            server.dprint (e);
+            server.dPrint(e);
         }
         try {
             if (sslStreams != null) {
                 sslStreams.close();
             }
         } catch (IOException e) {
-            server.dprint (e);
+            server.dPrint(e);
         }
         try {
             chan.close();
         } catch (IOException e) {
-            server.dprint (e);
+            server.dPrint(e);
         }
     }
 
     /* remaining is the number of bytes left on the lowest level inputstream
      * after the exchange is finished
      */
-    void setRemaining (int r) {
+    void setRemaining(int r) {
         remaining = r;
     }
 
-    int getRemaining () {
+    int getRemaining() {
         return remaining;
     }
 
-    SelectionKey getSelectionKey () {
+    SelectionKey getSelectionKey() {
         return selectionKey;
     }
 
-    InputStream getInputStream () {
-            return i;
+    InputStream getInputStream() {
+        return i;
     }
 
-    OutputStream getRawOutputStream () {
-            return rawout;
+    OutputStream getRawOutputStream() {
+        return rawout;
     }
 
-    String getProtocol () {
-            return protocol;
+    String getProtocol() {
+        return protocol;
     }
 
-    SSLEngine getSSLEngine () {
-            return engine;
+    SSLEngine getSSLEngine() {
+        return engine;
     }
 
-    SSLContext getSSLContext () {
-            return sslContext;
+    SSLContext getSSLContext() {
+        return sslContext;
     }
 
-    HttpContextImpl getHttpContext () {
-            return context;
+    HttpContextImpl getHttpContext() {
+        return context;
     }
 
     public Map<String, Object> getAttributes() {

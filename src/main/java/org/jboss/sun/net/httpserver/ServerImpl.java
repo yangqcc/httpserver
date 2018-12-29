@@ -328,8 +328,7 @@ class ServerImpl implements TimeSource {
             }
         }
 
-        final LinkedList<HttpConnection> connsToRegister =
-                new LinkedList<HttpConnection>();
+        final LinkedList<HttpConnection> connsToRegister = new LinkedList<>();
 
         void reRegister(HttpConnection c) {
             /* re-register with selector */
@@ -342,7 +341,7 @@ class ServerImpl implements TimeSource {
                 c.time = getTime() + idleInterval;
                 idleConnections.add(c);
             } catch (IOException e) {
-                dprint(e);
+                dPrint(e);
                 logger.log(Level.FINER, "Dispatcher(8)", e);
                 c.close();
             }
@@ -383,33 +382,32 @@ class ServerImpl implements TimeSource {
                             if (terminating) {
                                 continue;
                             }
-                            SocketChannel chan = schan.accept();
-                            if (chan == null) {
+                            SocketChannel socketChannel = schan.accept();
+                            if (socketChannel == null) {
                                 continue; /* cancel something ? */
                             }
-                            chan.configureBlocking(false);
-                            SelectionKey newkey = chan.register(selector, SelectionKey.OP_READ);
+                            socketChannel.configureBlocking(false);
+                            SelectionKey newKey = socketChannel.register(selector, SelectionKey.OP_READ);
                             HttpConnection c = new HttpConnection(ServerImpl.this);
-                            c.selectionKey = newkey;
-                            c.setChannel(chan);
-                            newkey.attach(c);
+                            c.selectionKey = newKey;
+                            c.setChannel(socketChannel);
+                            newKey.attach(c);
                             requestStarted(c);
                             allConnections.add(c);
                         } else {
                             try {
                                 if (key.isReadable()) {
                                     boolean closed;
-                                    SocketChannel chan = (SocketChannel) key.channel();
-                                    HttpConnection conn = (HttpConnection) key.attachment();
-
+                                    SocketChannel socketChannel = (SocketChannel) key.channel();
+                                    HttpConnection connection = (HttpConnection) key.attachment();
                                     key.cancel();
-                                    chan.configureBlocking(true);
-                                    if (idleConnections.remove(conn)) {
+                                    socketChannel.configureBlocking(true);
+                                    if (idleConnections.remove(connection)) {
                                         // was an idle connection so add it
                                         // to reqConnections set.
-                                        requestStarted(conn);
+                                        requestStarted(connection);
                                     }
-                                    handle(chan, conn);
+                                    handle(socketChannel, connection);
                                 } else {
                                     //DISABLED assert false;
                                 }
@@ -439,28 +437,24 @@ class ServerImpl implements TimeSource {
             closeConnection(conn);
         }
 
-        public void handle(SocketChannel chan, HttpConnection conn)
-                throws IOException {
+        public void handle(SocketChannel chan, HttpConnection conn) throws IOException {
             try {
                 Exchange t = new Exchange(chan, protocol, conn);
                 executor.execute(t);
             } catch (HttpError e1) {
                 logger.log(Level.FINER, "Dispatcher (4)", e1);
                 closeConnection(conn);
-            } catch (IOException e) {
-                logger.log(Level.FINER, "Dispatcher (5)", e);
-                closeConnection(conn);
             }
         }
     }
 
-    synchronized void dprint(String s) {
+    synchronized void dPrint(String s) {
         if (debug) {
             System.out.println(s);
         }
     }
 
-    synchronized void dprint(Exception e) {
+    synchronized void dPrint(Exception e) {
         if (debug) {
             System.out.println(e);
             e.printStackTrace();
@@ -484,6 +478,8 @@ class ServerImpl implements TimeSource {
             case IDLE:
                 idleConnections.remove(conn);
                 break;
+            default:
+                break;
         }
         //DISABLED assert !reqConnections.remove(conn);
         //DISABLED assert !rspConnections.remove(conn);
@@ -503,16 +499,16 @@ class ServerImpl implements TimeSource {
         HttpContextImpl ctx;
         boolean rejected = false;
 
-        Exchange(SocketChannel chan, String protocol, HttpConnection conn) throws IOException {
-            this.chan = chan;
-            this.connection = conn;
+        Exchange(SocketChannel socketChannel, String protocol, HttpConnection connection) {
+            this.chan = socketChannel;
+            this.connection = connection;
             this.protocol = protocol;
         }
 
         public void run() {
             /* context will be null for new connections */
             context = connection.getHttpContext();
-            boolean newconnection;
+            boolean newConnection;
             SSLEngine engine = null;
             String requestLine = null;
             SSLStreams sslStreams = null;
@@ -520,10 +516,10 @@ class ServerImpl implements TimeSource {
                 if (context != null) {
                     this.rawin = connection.getInputStream();
                     this.rawout = connection.getRawOutputStream();
-                    newconnection = false;
+                    newConnection = false;
                 } else {
                     /* figure out what kind of connection this is */
-                    newconnection = true;
+                    newConnection = true;
                     if (https) {
                         if (sslContext == null) {
                             logger.warning("SSL connection received. No https contxt created");
@@ -612,13 +608,13 @@ class ServerImpl implements TimeSource {
                     } else if (chdr.equalsIgnoreCase("keep-alive")) {
                         rheaders.set("Connection", "keep-alive");
                         int idle = (int) idleInterval / 1000;
-                        int max = (int) maxIdleConnections;
+                        int max = maxIdleConnections;
                         String val = "timeout=" + idle + ", max=" + max;
                         rheaders.set("Keep-Alive", val);
                     }
                 }
 
-                if (newconnection) {
+                if (newConnection) {
                     connection.setParameters(
                             rawin, rawout, chan, engine, sslStreams,
                             sslContext, protocol, ctx, rawin
@@ -662,11 +658,9 @@ class ServerImpl implements TimeSource {
                 logger.log(Level.FINER, "ServerImpl.Exchange (1)", e1);
                 closeConnection(connection);
             } catch (NumberFormatException e3) {
-                reject(Code.HTTP_BAD_REQUEST,
-                        requestLine, "NumberFormatException thrown");
+                reject(Code.HTTP_BAD_REQUEST, requestLine, "NumberFormatException thrown");
             } catch (URISyntaxException e) {
-                reject(Code.HTTP_BAD_REQUEST,
-                        requestLine, "URISyntaxException thrown");
+                reject(Code.HTTP_BAD_REQUEST, requestLine, "URISyntaxException thrown");
             } catch (Exception e4) {
                 logger.log(Level.FINER, "ServerImpl.Exchange (2)", e4);
                 closeConnection(connection);

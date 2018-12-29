@@ -75,6 +75,7 @@ class ChunkedOutputStream extends FilterOutputStream
         //DISABLED assert count < CHUNK_SIZE;
     }
 
+    @Override
     public void write (byte[]b, int off, int len) throws IOException {
         if (closed) {
             throw new StreamClosedException ();
@@ -126,6 +127,7 @@ class ChunkedOutputStream extends FilterOutputStream
         pos = OFFSET;
     }
 
+    @Override
     public void close () throws IOException {
         if (closed) {
             return;
@@ -150,6 +152,7 @@ class ChunkedOutputStream extends FilterOutputStream
         t.getHttpContext().getServerImpl().addEvent (e);
     }
 
+    @Override
     public void flush () throws IOException {
         if (closed) {
             throw new StreamClosedException ();

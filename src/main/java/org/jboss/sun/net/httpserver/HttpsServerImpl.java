@@ -35,6 +35,9 @@ import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
+/**
+ * @author yangqc
+ */
 public class HttpsServerImpl extends HttpsServer {
 
     ServerImpl server;

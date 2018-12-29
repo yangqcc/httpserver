@@ -25,75 +25,81 @@
 
 package org.jboss.sun.net.httpserver;
 
+import org.jboss.com.sun.net.httpserver.HttpContext;
+import org.jboss.com.sun.net.httpserver.HttpHandler;
+import org.jboss.com.sun.net.httpserver.HttpServer;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
-import org.jboss.com.sun.net.httpserver.HttpContext;
-import org.jboss.com.sun.net.httpserver.HttpHandler;
-import org.jboss.com.sun.net.httpserver.HttpServer;
-
+/**
+ * @author yangqc
+ */
 public class HttpServerImpl extends HttpServer {
 
     ServerImpl server;
 
-    HttpServerImpl () throws IOException {
-        this (new InetSocketAddress(80), 0);
+    HttpServerImpl() throws IOException {
+        this(new InetSocketAddress(80), 0);
     }
 
-    HttpServerImpl (
-        InetSocketAddress addr, int backlog
+    HttpServerImpl(
+            InetSocketAddress addr, int backlog
     ) throws IOException {
         this(addr, backlog, null);
     }
-    
-    HttpServerImpl (
-            InetSocketAddress addr, int backlog, Map<String, String> configuration
-        ) throws IOException {
-            server = new ServerImpl (this, "http", addr, backlog, configuration);
-        }    
-    
 
-    public void bind (InetSocketAddress addr, int backlog) throws IOException {
-        server.bind (addr, backlog);
+    HttpServerImpl(
+            InetSocketAddress addr, int backlog, Map<String, String> configuration
+    ) throws IOException {
+        server = new ServerImpl(this, "http", addr, backlog, configuration);
+    }
+
+
+    public void bind(InetSocketAddress addr, int backlog) throws IOException {
+        server.bind(addr, backlog);
     }
 
     @Override
-    public void start () {
+    public void start() {
         server.start();
     }
 
     @Override
-    public void setExecutor (Executor executor) {
+    public void setExecutor(Executor executor) {
         server.setExecutor(executor);
     }
 
     @Override
-    public Executor getExecutor () {
+    public Executor getExecutor() {
         return server.getExecutor();
     }
 
     @Override
-    public void stop (int delay) {
-        server.stop (delay);
+    public void stop(int delay) {
+        server.stop(delay);
     }
 
     @Override
-    public HttpContextImpl createContext (String path, HttpHandler handler) {
-        return server.createContext (path, handler);
+    public HttpContextImpl createContext(String path, HttpHandler handler) {
+        return server.createContext(path, handler);
     }
 
-    public HttpContextImpl createContext (String path) {
-        return server.createContext (path);
+    @Override
+    public HttpContextImpl createContext(String path) {
+        return server.createContext(path);
     }
 
-    public void removeContext (String path) throws IllegalArgumentException {
-        server.removeContext (path);
+    @Override
+    public void removeContext(String path) throws IllegalArgumentException {
+        server.removeContext(path);
     }
 
-    public void removeContext (HttpContext context) throws IllegalArgumentException {
-        server.removeContext (context);
+    @Override
+    public void removeContext(HttpContext context) throws IllegalArgumentException {
+        server.removeContext(context);
     }
 
     @Override

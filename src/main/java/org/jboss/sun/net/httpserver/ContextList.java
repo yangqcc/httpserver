@@ -42,14 +42,14 @@ class ContextList {
         return list.size();
     }
 
-    /* initially contexts are located only by protocol:path.
+    /** initially contexts are located only by protocol:path.
      * Context with longest prefix matches (currently case-sensitive)
      */
     synchronized HttpContextImpl findContext(String protocol, String path) {
         return findContext(protocol, path, false);
     }
 
-    synchronized HttpContextImpl findContext(String protocol, String path, boolean exact) {
+    private synchronized HttpContextImpl findContext(String protocol, String path, boolean exact) {
         protocol = protocol.toLowerCase();
         String longest = "";
         HttpContextImpl lc = null;
