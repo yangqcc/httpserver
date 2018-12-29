@@ -54,7 +54,7 @@ class ExchangeImpl {
     HttpConnection connection;
     long reqContentLen;
     long rspContentLen;
-    /* raw streams which access the socket directly */
+    /* rawIn streams which access the socket directly */
     InputStream ris;
     OutputStream ros;
     Thread thread;

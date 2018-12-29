@@ -51,13 +51,13 @@ class HttpConnection {
     /**
      * high level streams returned to application
      */
-    InputStream inputStream;
+    private InputStream inputStream;
 
     /**
      * low level stream that sits directly over channel
      */
-    InputStream raw;
-    OutputStream rawout;
+    InputStream rawIn;
+    OutputStream rawOut;
 
     private SocketChannel chan;
     SelectionKey selectionKey;
@@ -114,8 +114,8 @@ class HttpConnection {
     ) {
         this.context = context;
         this.inputStream = in;
-        this.rawout = rawout;
-        this.raw = raw;
+        this.rawOut = rawout;
+        this.rawIn = raw;
         this.protocol = protocol;
         this.engine = engine;
         this.chan = chan;
@@ -143,15 +143,15 @@ class HttpConnection {
         }
         try {
             /* need to ensure temporary selectors are closed */
-            if (raw != null) {
-                raw.close();
+            if (rawIn != null) {
+                rawIn.close();
             }
         } catch (IOException e) {
             server.dPrint(e);
         }
         try {
-            if (rawout != null) {
-                rawout.close();
+            if (rawOut != null) {
+                rawOut.close();
             }
         } catch (IOException e) {
             server.dPrint(e);
@@ -191,7 +191,7 @@ class HttpConnection {
     }
 
     OutputStream getRawOutputStream() {
-        return rawout;
+        return rawOut;
     }
 
     String getProtocol() {

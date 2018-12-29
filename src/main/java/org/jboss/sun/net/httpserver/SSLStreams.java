@@ -47,7 +47,6 @@ class SSLStreams {
 
     private SSLContext sslctx;
     private SocketChannel socketChannel;
-    private TimeSource time;
     private SSLEngine engine;
     private EngineWrapper wrapper;
     private OutputStream os;
@@ -61,7 +60,6 @@ class SSLStreams {
 
     SSLStreams(ServerImpl server, SSLContext sslCtx, SocketChannel socketChannel) {
         this.server = server;
-        this.time = server;
         this.sslctx = sslCtx;
         this.socketChannel = socketChannel;
         InetSocketAddress addr = (InetSocketAddress) socketChannel.socket().getRemoteSocketAddress();
@@ -422,25 +420,24 @@ class SSLStreams {
      */
     public WrapperResult recvData(ByteBuffer dst) throws IOException {
         /* we wait until some user data arrives */
-        WrapperResult r = null;
+        WrapperResult wrapperResult = null;
         //DISABLED assert dst.position() == 0;
         while (dst.position() == 0) {
-            r = wrapper.recvAndUnwrap(dst);
-            dst = (r.buf != dst) ? r.buf : dst;
-            Status status = r.result.getStatus();
+            wrapperResult = wrapper.recvAndUnwrap(dst);
+            dst = (wrapperResult.buf != dst) ? wrapperResult.buf : dst;
+            Status status = wrapperResult.result.getStatus();
             if (status == Status.CLOSED) {
                 doClosure();
-                return r;
+                return wrapperResult;
             }
 
-            HandshakeStatus hsStatus = r.result.getHandshakeStatus();
-            if (hsStatus != HandshakeStatus.FINISHED &&
-                    hsStatus != HandshakeStatus.NOT_HANDSHAKING) {
+            HandshakeStatus hsStatus = wrapperResult.result.getHandshakeStatus();
+            if (hsStatus != HandshakeStatus.FINISHED && hsStatus != HandshakeStatus.NOT_HANDSHAKING) {
                 doHandshake(hsStatus);
             }
         }
         dst.flip();
-        return r;
+        return wrapperResult;
     }
 
     /**
